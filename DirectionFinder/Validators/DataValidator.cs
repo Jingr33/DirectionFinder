@@ -41,7 +41,7 @@ public static class DataValidator
     {
         if (nodeDepth == 0 && rootNode is not null)
         {
-            throw new InvalidCastException($"Multiple root nodes are not allowed at line '{line}'");
+            throw new InvalidDataException($"Multiple root nodes are not allowed at line '{line}'");
         }
     }
 

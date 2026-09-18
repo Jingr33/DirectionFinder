@@ -5,7 +5,7 @@ using DirectionFinder.Parsers;
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static int Main(string[] args)
     {
         try
         {
@@ -24,7 +24,7 @@ public class Program
 
             var nodeItemIndex = inputNodeNumber - 1;
 
-            if (nodeItemIndex < 0 || nodeItemIndex >= parsedData.OrderedItemNodes.Count())
+            if (nodeItemIndex < 0 || nodeItemIndex >= parsedData.OrderedItemNodes.Length)
             {
                 throw new ArgumentOutOfRangeException(null, "Number of a specified item is not in the list");
             }
@@ -32,12 +32,15 @@ public class Program
             Console.WriteLine();
             var selectedNode = parsedData.OrderedItemNodes[nodeItemIndex];
             DisplayParentInstructions(selectedNode.Parent!);
+
+            return 0;
         }
         catch (Exception ex)
         {
             Console.WriteLine();
             Console.WriteLine($"Error: {ex.Message}, application terminated");
-            Environment.Exit(1);
+
+            return 1;
         }
     }
 

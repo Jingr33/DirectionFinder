@@ -4,7 +4,7 @@ using DirectionFinder.Validators;
 
 namespace DirectionFinder.Parsers;
 
-public sealed class FileDataParser
+public static class FileDataParser
 {
     public static ParsedData Parse(IEnumerable<string> lines)
     {
@@ -79,7 +79,7 @@ public sealed class FileDataParser
         var (depth, contentOffset) = ParsePrefix(line);
         var content = line[contentOffset..].TrimStart();
 
-        if (content.StartsWith("Item: "))
+        if (content.StartsWith("Item: ", StringComparison.Ordinal))
         {
             var text = content["Item: ".Length..].Trim();
 
@@ -87,7 +87,7 @@ public sealed class FileDataParser
 
             return new ParsedLine(depth, text, true);
         }
-        else if (content.StartsWith("+ "))
+        else if (content.StartsWith("+ ", StringComparison.Ordinal))
         {
             var text = content["+ ".Length..].Trim();
 
@@ -104,7 +104,8 @@ public sealed class FileDataParser
     {
         DataValidator.ValidateEmptyDataLine(line);
 
-        if (line.StartsWith("+ ") || line.StartsWith("Item: "))
+        if (line.StartsWith("+ ", StringComparison.Ordinal) ||
+            line.StartsWith("Item: ", StringComparison.Ordinal))
         {
             return (0, 0);
         }
