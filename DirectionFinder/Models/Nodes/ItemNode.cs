@@ -1,3 +1,3 @@
 ﻿namespace DirectionFinder.Models.Nodes;
 
-public class ItemNode(NodeBase parent, string text) : NodeBase(parent, text);
+public sealed class ItemNode(DirectionNode parent, string text) : NodeBase(parent, text);

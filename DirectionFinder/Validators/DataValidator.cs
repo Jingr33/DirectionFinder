@@ -33,7 +33,23 @@ public static class DataValidator
     {
         if (currentNodeDepth > lastNodeDepth)
         {
-            throw new InvalidDataException($"Invalid hierarchy at line: {line}");
+            throw new InvalidDataException($"Invalid hierarchy at line '{line}'");
+        }
+    }
+
+    public static void ValidateSingleRootNode(string line, int nodeDepth, DirectionNode? rootNode)
+    {
+        if (nodeDepth == 0 && rootNode is not null)
+        {
+            throw new InvalidCastException($"Multiple root nodes are not allowed at line '{line}'");
+        }
+    }
+
+    public static void ValidateDirectionPathEndsWithItem(DirectionNode directionNode)
+    {
+        if (directionNode.Children.Count == 0)
+        {
+            throw new InvalidDataException($"Direction '{directionNode.Text}' does not lead to an item");
         }
     }
 
@@ -41,14 +57,14 @@ public static class DataValidator
     {
         if (position + 3 >= line.Length)
         {
-            throw new InvalidDataException($"Line {line} contains an invalid branch prefix");
+            throw new InvalidDataException($"Line '{line}' contains an invalid branch prefix");
         }
 
         var branch = line[position..(position + 3)];
 
         if (branch != "├──" && branch != "└──")
         {
-            throw new InvalidDataException($"Invalid branch prefix '{branch}' at position {position} in line {line}");
+            throw new InvalidDataException($"Invalid branch prefix '{branch}' at position '{position}' in line '{line}'");
         }
     }
 
@@ -56,7 +72,7 @@ public static class DataValidator
     {
         if (string.IsNullOrWhiteSpace(nodeText))
         {
-            throw new InvalidDataException($"Node text is empty or whitespace in line: {line}");
+            throw new InvalidDataException($"Node text is empty or whitespace in line '{line}'");
         }
     }
 }

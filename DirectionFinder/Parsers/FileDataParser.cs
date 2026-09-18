@@ -9,7 +9,7 @@ public sealed class FileDataParser
     public static ParsedData Parse(IEnumerable<string> lines)
     {
         var itemNodes = new Dictionary<string, ItemNode>();
-        var nodeStack = new Stack<NodeBase>();
+        var nodeStack = new Stack<DirectionNode>();
         DirectionNode? rootNode = null;
 
         foreach (var line in lines)
@@ -17,10 +17,12 @@ public sealed class FileDataParser
             var parsedLine = ParseLine(line);
 
             DataValidator.ValidateNodeHierarchy(line, parsedLine.Depth, nodeStack.Count);
+            DataValidator.ValidateSingleRootNode(line, parsedLine.Depth, rootNode);
 
             while (nodeStack.Count > parsedLine.Depth)
             {
-                nodeStack.Pop();
+                var completeDirection = nodeStack.Pop();
+                DataValidator.ValidateDirectionPathEndsWithItem(completeDirection);
             }
 
             NodeBase node;
@@ -30,6 +32,7 @@ public sealed class FileDataParser
                 DataValidator.ValidateRootNodeIsDirection(parsedLine);
                 rootNode = new DirectionNode(parsedLine.Text);
                 node = rootNode;
+                nodeStack.Push((DirectionNode)node);
             }
             else
             {
@@ -41,7 +44,7 @@ public sealed class FileDataParser
 
                     if (!itemNodes.TryAdd(itemNode.Text, itemNode))
                     {
-                        throw new InvalidOperationException($"This is a duplicate item node {itemNode.Text}.");
+                        throw new InvalidOperationException($"This is a duplicate item node '{itemNode.Text}'");
                     }
 
                     node = itemNode;
@@ -49,13 +52,17 @@ public sealed class FileDataParser
                 else
                 {
                     node = new DirectionNode(parentNode, parsedLine.Text);
+                    nodeStack.Push((DirectionNode)node);
                 }
 
-                parentNode.Children.Add(node);
+                parentNode.AddChild(node);
             }
+        }
 
-            nodeStack.Push(node);
-
+        while (nodeStack.Count > 0)
+        {
+            var completeDirection = nodeStack.Pop();
+            DataValidator.ValidateDirectionPathEndsWithItem(completeDirection);
         }
 
         DataValidator.ValidateRootNode(rootNode);
@@ -70,20 +77,26 @@ public sealed class FileDataParser
     private static ParsedLine ParseLine(string line)
     {
         var (depth, contentOffset) = ParsePrefix(line);
-        var content = GetContent(line, contentOffset);
+        var content = line[contentOffset..].TrimStart();
 
         if (content.StartsWith("Item: "))
         {
-            content = content["Item: ".Length..];
-            return new ParsedLine(depth, content, true);
+            var text = content["Item: ".Length..].Trim();
+
+            DataValidator.ValidateNodeText(line, text);
+
+            return new ParsedLine(depth, text, true);
         }
         else if (content.StartsWith("+ "))
         {
-            content = content["+ ".Length..];
-            return new ParsedLine(depth, content, false);
+            var text = content["+ ".Length..].Trim();
+
+            DataValidator.ValidateNodeText(line, text);
+
+            return new ParsedLine(depth, text, false);
         }
 
-        throw new InvalidOperationException($"Invalid line prefix in line: {line}");
+        throw new InvalidOperationException($"Invalid direction/item prefix in line: '{line}'");
 
     }
 
@@ -117,14 +130,5 @@ public sealed class FileDataParser
         position += 3;
 
         return (depth, position);
-    }
-
-    private static string GetContent(string line, int offset)
-    {
-        var nodeText = line[offset..].Trim();
-
-        DataValidator.ValidateNodeText(line, nodeText);
-
-        return nodeText;
     }
 }

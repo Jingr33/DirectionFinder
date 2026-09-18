@@ -1,7 +1,16 @@
 ﻿namespace DirectionFinder.Models.Nodes;
 
-public class DirectionNode : NodeBase
+public sealed class DirectionNode : NodeBase
 {
-    public DirectionNode(NodeBase? parent, string text) : base(parent, text) { }
+    private readonly List<NodeBase> children = new();
+
+    public DirectionNode(DirectionNode? parent, string text) : base(parent, text) { }
     public DirectionNode(string text) : base(null, text) { }
+
+    public IReadOnlyList<NodeBase> Children => children;
+
+    public void AddChild(NodeBase child)
+    {
+        children.Add(child);
+    }
 }
